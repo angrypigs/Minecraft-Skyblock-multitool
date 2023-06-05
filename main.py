@@ -4,10 +4,12 @@ import time as tm
 from pynput.keyboard import Key, Listener
 from pynput import keyboard
 
-h, w = 350, 300
 flag_working = False
 
 class cobblestoneMiner:
+    """
+    Class with cobblestone miner functions
+    """
 
     def __init__(self) -> None:
         pass
@@ -31,14 +33,16 @@ class cobblestoneMiner:
                 pg.press(str(i+2))
             tm.sleep(1)
 
-    def start(self, pickaxe_amount: int) -> None:
+    def start(self, coords: list, pickaxe_amount: int) -> None:
+        self.FIRST_CELL = [coords[0], coords[1]]
+        self.DIST = coords[2]
         self.mine()
         for i in range(pickaxe_amount):
             if not flag_working:
                 return
             pg.press('e')
             pg.keyDown('shiftleft')
-            coords = [670, 575+(i*70)]
+            coords = [self.FIRST_CELL[0], self.FIRST_CELL[1]+(i*self.DIST)]
             for j in range(9):
                 pg.click(coords[0], coords[1])
                 coords[0] += 70
@@ -48,7 +52,12 @@ class cobblestoneMiner:
             pg.press('1')
             self.mine()
 
+
+
 class coarseDirtMiner:
+    """
+    Class with coarse dirt miner functions
+    """
 
     def __init__(self) -> None:
         pass
@@ -67,47 +76,59 @@ class coarseDirtMiner:
         pg.press('q')
         pg.keyDown('shiftleft')
         pg.press('e')
-        pg.moveTo(670+(idx%9*70), 575+(idx//9*70))
-        pg.rightClick(670+(idx%9*70), 575+(idx//9*70))
+        pg.moveTo(self.FIRST_CELL[0]+(idx%9*self.DIST), self.FIRST_CELL[1]+(idx//9*self.DIST))
+        pg.rightClick(self.FIRST_CELL[0]+(idx%9*self.DIST), self.FIRST_CELL[1]+(idx//9*self.DIST))
         idx += 1
-        pg.moveTo(670+(idx%9*70), 575+(idx//9*70))
-        pg.rightClick(670+(idx%9*70), 575+(idx//9*70))
+        pg.moveTo(self.FIRST_CELL[0]+(idx%9*self.DIST), self.FIRST_CELL[1]+(idx//9*self.DIST))
+        pg.rightClick(self.FIRST_CELL[0]+(idx%9*self.DIST), self.FIRST_CELL[1]+(idx//9*self.DIST))
         idx += 1
         pg.keyUp('shiftleft')
         pg.press('esc')
         return idx
     
-    def start(self, time: float = 2) -> None:
+    def start(self, coords: list) -> None:
+        self.FIRST_CELL = [coords[0], coords[1]]
+        self.DIST = coords[2]
         index = 0
         counter = 0
         while True:
             if not flag_working:
                 return
             counter += 1
-            self.mine(time)
+            self.mine(2)
             if counter%64==0:
                 index = self.reload(index)
 
 class App:
+    """
+    App class
+    """
     def __init__(self) -> None:
+        # init constants
+        self.HEIGHT = 350
+        self.WIDTH = 300
+        self.EQ_COORDS_LIST = [[], [670, 575, 72], [840, 780, 108]]
+        # init app
         self.master = tk.Tk()
-        self.mode = tk.IntVar()
+        self.mode = tk.IntVar(self.master, value=1)
+        self.resolution = tk.IntVar(self.master, value=2)
         self.master.title("Minecraft multitool")
-        self.master.geometry("{}x{}".format(w, h))
+        self.master.geometry("{}x{}".format(self.WIDTH, self.HEIGHT))
         self.master.resizable(False, False)
-        c_main = tk.Canvas(self.master, height=h, width=w, bd=0, highlightthickness=0, bg="#EEC2A2")
+        c_main = tk.Canvas(self.master, height=self.HEIGHT, width=self.WIDTH, bd=0, highlightthickness=0, bg="#EEC2A2")
         c_main.place(x=0, y=0)
         checkbox1 = tk.Radiobutton(c_main, text="Coarse dirt to dirt converter", variable=self.mode, value=1, bg="#EEC2A2", font=16)
         checkbox2 = tk.Radiobutton(c_main, text="Cobblestone miner", variable=self.mode, value=2, bg="#EEC2A2", font=16)
         checkbox1.place(x=10, y=20)
         checkbox2.place(x=10, y=50)
+        # start listening for keys
         self.key_listen()
         self.master.mainloop()
     
     def key_listen(self) -> None:
-        global listener
-        listener = Listener(on_press=self.choose_program)
-        listener.start()
+        # function to listen for keys
+        self.listener = Listener(on_press=self.choose_program)
+        self.listener.start()
 
     def choose_program(self, key) -> None:
         global flag_working
@@ -115,14 +136,16 @@ class App:
             if self.mode.get()==1:
                 flag_working = True
                 self.key_listen()
-                coarseDirtMiner().start(0.4)
+                coarseDirtMiner().start(self.EQ_COORDS_LIST[self.resolution.get()])
             elif self.mode.get()==2:
                 flag_working = True
                 self.key_listen()
-                cobblestoneMiner().start(9)
+                cobblestoneMiner().start(self.EQ_COORDS_LIST[self.resolution.get()], 9)
         if key == keyboard.Key.f7:
-            listener.stop()
+            self.listener.stop()
             flag_working = False
+
+
 
 if __name__ == "__main__":
     app = App()
