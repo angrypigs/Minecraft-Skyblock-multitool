@@ -23,15 +23,11 @@ class cobblestoneMiner:
             counter += 1
 
     def mine(self, time: int = 197) -> None:
-        for i in range(9):
-            if not flag_working:
-                return
-            pg.mouseDown(button='left')
-            self.time_counter(time)
-            pg.mouseUp(button='left')
-            if i != 8:
-                pg.press(str(i+2))
-            tm.sleep(1)
+        if not flag_working:
+            return
+        pg.mouseDown(button='left')
+        self.time_counter(time)
+        pg.mouseUp(button='left')
 
     def start(self, coords: list, pickaxe_amount: int) -> None:
         self.FIRST_CELL = [coords[0], coords[1]]
@@ -41,13 +37,8 @@ class cobblestoneMiner:
             if not flag_working:
                 return
             pg.press('e')
-            pg.keyDown('shiftleft')
-            coords = [self.FIRST_CELL[0], self.FIRST_CELL[1]+(i*self.DIST)]
-            for j in range(9):
-                pg.click(coords[0], coords[1])
-                coords[0] += 70
-            pg.click(coords[0], coords[1])
-            pg.keyUp('shiftleft')
+            pg.moveTo(self.FIRST_CELL[0]+(i%9*self.DIST), self.FIRST_CELL[1]+(i//9*self.DIST))
+            pg.press('1')
             pg.press('esc')
             pg.press('1')
             self.mine()
