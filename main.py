@@ -53,13 +53,13 @@ class coarseDirtMiner:
     def __init__(self) -> None:
         pass
 
-    def mine(self, time: float = 2) -> None:
+    def mine(self, time_delay: float = 0.4) -> None:
         pg.press('1')
         pg.click(button='right')
         pg.press('2')
         pg.click(button='right')
         pg.mouseDown(button='left')
-        tm.sleep(time)
+        tm.sleep(time_delay)
         pg.mouseUp(button='left')
     
     def reload(self, idx: int) -> int:
@@ -86,9 +86,34 @@ class coarseDirtMiner:
             if not flag_working:
                 return
             counter += 1
-            self.mine(2)
+            self.mine()
             if counter%64==0:
                 index = self.reload(index)
+
+
+
+class autoBridge:
+    """
+    Class with auto bridge functions
+    """
+    def __init__(self) -> None:
+        pass
+    
+    def start(self) -> None:
+        pg.keyDown('shiftleft')
+        pg.keyDown('s')
+        tm.sleep(0.5)
+        pg.rightClick()
+        while True:
+            if not flag_working:
+                pg.keyUp('s')
+                pg.rightClick()
+                pg.keyUp('shiftleft')
+                return
+            tm.sleep(0.65)
+            pg.rightClick()
+        
+        
 
 class App:
     """
@@ -109,9 +134,11 @@ class App:
         c_main = tk.Canvas(self.master, height=self.HEIGHT, width=self.WIDTH, bd=0, highlightthickness=0, bg="#EEC2A2")
         c_main.place(x=0, y=0)
         checkbox1 = tk.Radiobutton(c_main, text="Coarse dirt to dirt converter", variable=self.mode, value=1, bg="#EEC2A2", font=16)
-        checkbox2 = tk.Radiobutton(c_main, text="Cobblestone miner", variable=self.mode, value=2, bg="#EEC2A2", font=16)
         checkbox1.place(x=10, y=20)
+        checkbox2 = tk.Radiobutton(c_main, text="Cobblestone miner", variable=self.mode, value=2, bg="#EEC2A2", font=16)
         checkbox2.place(x=10, y=50)
+        checkbox3 = tk.Radiobutton(c_main, text="Auto bridge", variable=self.mode, value=3, bg="#EEC2A2", font=16)
+        checkbox3.place(x=10, y=80)
         # start listening for keys
         self.key_listen()
         self.master.mainloop()
@@ -132,6 +159,10 @@ class App:
                 flag_working = True
                 self.key_listen()
                 cobblestoneMiner().start(self.EQ_COORDS_LIST[self.resolution.get()], 9)
+            elif self.mode.get()==3:
+                flag_working = True
+                self.key_listen()
+                autoBridge().start()
         if key == keyboard.Key.f7:
             self.listener.stop()
             flag_working = False
